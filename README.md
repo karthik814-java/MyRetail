@@ -15,7 +15,7 @@ http://localhost:8080/swagger-ui.html
 
 Provide X-CLIENT-ID as TARGET while testing GET & PUT product API's.
 
-![Arch](/src/main/resources/static/Swagger.png)
+![Arch](/src/main/resources/static/Swagger Doc.png)
 
 ## Monitor Application stats
 
