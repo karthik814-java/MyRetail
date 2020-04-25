@@ -9,10 +9,12 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -67,17 +69,20 @@ public class ProductServiceExceptionHandler extends ResponseEntityExceptionHandl
 			HttpHeaders headers, 
 			HttpStatus status, 
 			WebRequest request) {
-		List<String> errors = new ArrayList<String>();
-		for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-			errors.add(error.getDefaultMessage());
+		List<String> errorMessage = new ArrayList<String>();
+		List<String> error = new ArrayList<String>();
+		for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
+			errorMessage.add(fieldError.getDefaultMessage());
+			error.add(fieldError.getField());
 		}
-		for (ObjectError error : ex.getBindingResult().getGlobalErrors()) {
-			errors.add(error.getDefaultMessage());
+		for (ObjectError globalError : ex.getBindingResult().getGlobalErrors()) {
+			errorMessage.add(globalError.getDefaultMessage());
+			error.add(globalError.getObjectName());
 		}
 
-		Error error = 
-				new Error(HttpStatus.BAD_REQUEST,"Request Validation Failed ", errors.toString(), errors);
-		return new ResponseEntity<>(error, error.getHttpStatus());
+		Error errorEntity = 
+				new Error(HttpStatus.BAD_REQUEST,"Request Validation Failed for following fields : " +error.toString() , errorMessage.toString(), errorMessage);
+		return new ResponseEntity<>(errorEntity, errorEntity.getHttpStatus());
 
 	}
 
@@ -86,7 +91,7 @@ public class ProductServiceExceptionHandler extends ResponseEntityExceptionHandl
 	 * Handle MethodArgumentTypeMismatchException, handle generic MethodArgumentTypeMismatchException.class
 	 *
 	 * @param ex the Exception
-	 * @return the ApiError object
+	 * @return the Error object
 	 */
 	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
 	protected ResponseEntity<Object> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex,
@@ -102,7 +107,7 @@ public class ProductServiceExceptionHandler extends ResponseEntityExceptionHandl
 	 * Handle Exception, handle generic Exception.class
 	 *
 	 * @param ex the Exception
-	 * @return the ApiError object
+	 * @return the Error object
 	 */
 	@ExceptionHandler(Exception.class)
 	protected ResponseEntity<Error> handleCustomAPIException(Exception ex,
@@ -120,20 +125,44 @@ public class ProductServiceExceptionHandler extends ResponseEntityExceptionHandl
 	 * @param headers HttpHeaders
 	 * @param status  HttpStatus
 	 * @param request WebRequest
-	 * @return the ApiError object
+	 * @return the Error object
 	 */
 	@Override
 	protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
 
+        Throwable specificCause = ex.getMostSpecificCause();
+        String errorMessage = null;
+        if ( null!= specificCause ) {
+        	 errorMessage = specificCause.getClass().getName();
+        }
+
 		Error error = 
-				new Error(HttpStatus.BAD_REQUEST,"Malformed Json Request ", ex);
+				new Error(HttpStatus.BAD_REQUEST,"Malformed Json Request : " + errorMessage, ex);
 		return new ResponseEntity<>(error, error.getHttpStatus());
 
 	}
-
-
-
-
+	
+	
+	/**
+	 * Handle HttpMediaTypeNotSupportedException. Happens when wrong Media Type is passed.
+	 *
+	 * @param ex      HttpMediaTypeNotSupportedException
+	 * @param headers HttpHeaders
+	 * @param status  HttpStatus
+	 * @param request WebRequest
+	 * @return the Error object
+	 */
+	@Override
+    protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
+        String unsupported = "Unsupported content type: " + ex.getContentType();
+        String supported = "Supported content types: " + MediaType.toString(ex.getSupportedMediaTypes());
+        Error error = 
+				new Error(HttpStatus.BAD_REQUEST,"Unsupported Media Type Error :" + unsupported +"   " + supported, ex);
+        return new ResponseEntity<>(error, error.getHttpStatus());
+    }
+	
+	
+	
 	private ResponseEntity<Error> buildResponseEntity(ProductServiceException exception) {
 
 		Error error = MessageResourceConfig.getAPIErrorBinding(exception);
