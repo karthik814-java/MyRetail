@@ -1,0 +1,53 @@
+# Below are the error mappings between External Services error codes and Product WS API error codes.
+# External error codes starting with 2 series, Product-API error codes starting with 1 series
+error_mappings:
+
+   '201': '107'
+
+
+
+
+# Below are the error messages for the Product-WS application.  
+error_messages:
+
+#Default error code
+   100:
+       apimsg: We're sorry! Looks like we're experiencing some technical difficulties. Please try again later.
+       httpcode: 500
+       
+   101:
+      apimsg: Invalid client id
+      httpcode: 400
+ 
+   102:
+       apimsg: Product Id in URI is too long
+       httpcode: 400
+       
+   103:
+      apimsg: ProductId in URI and body doesn't match
+      httpcode: 400
+      
+   104:
+      apimsg: Error occured in product lookup from Redsky API
+      httpcode: 500
+
+   105:
+      apimsg: Error occured in fetching product price from DB
+      httpcode: 500
+      
+   106:
+      apimsg: Error occured in updating product price in DB
+      httpcode: 500
+      
+   107:
+      apimsg: Response failed for Redsky API
+      httpcode: 500
+      
+   108: 
+      apimsg: Product Id is missing
+      httpcode: 400
+      
+   109:
+      apimsg: Invalid Product Id
+      httpcode: 400
+      
