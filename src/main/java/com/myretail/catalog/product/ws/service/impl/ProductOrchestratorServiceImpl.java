@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.myretail.catalog.product.ws.circuit.GetProductPriceCommand;
-import com.myretail.catalog.product.ws.circuit.ProductDetailCommand;
+import com.myretail.catalog.product.ws.circuit.GetProductDetailCommand;
 import com.myretail.catalog.product.ws.circuit.UpdateProductPriceCommand;
 import com.myretail.catalog.product.ws.client.ProductDetailServiceClient;
 import com.myretail.catalog.product.ws.client.response.ProductDetailResponse;
@@ -39,7 +39,14 @@ public class ProductOrchestratorServiceImpl implements ProductOrchestratorServic
 		this.productDetailServiceClient = productDetailServiceClient;
 		this.beanMapper = beanMapper;
 	}
-
+	
+	
+	
+	/**
+	 * Retrieves the full product details by getting name from external Redsky API & price from DB
+	 * @param prodId passed in request
+	 * @return Product
+	 */
 	public Product getProductInfo(String prodId) {
 		final String methodName = "[ ProductOrchestratorServiceImpl :: getProductInfo ]";
 		LOGGER.debug(ProductConstants.LOG_DEBUG_METHOD_START_MSG, methodName);
@@ -49,7 +56,7 @@ public class ProductOrchestratorServiceImpl implements ProductOrchestratorServic
 		try {
 			Long productId = Long.valueOf(prodId);
 
-			productAggregateObservable = Observable.zip(new ProductDetailCommand(productId, productDetailServiceClient)
+			productAggregateObservable = Observable.zip(new GetProductDetailCommand(productId, productDetailServiceClient)
 					.toObservable().onErrorReturn(exception -> {
 						LOGGER.error("Hystrix error occured in product lookup from Redsky API {}", exception);
 						throw new ProductServiceException("104", exception.getMessage());
@@ -75,6 +82,16 @@ public class ProductOrchestratorServiceImpl implements ProductOrchestratorServic
 
 	}
 
+	
+	/**
+	 * Updates the product information into DB. 
+	 * If price already exists in DB for the given product id, price get updated. 
+	 * If price doesn't exists in DB for the given product id, new price get's created.
+	 * 
+	 * @param prodId passed in request
+	 * @param productDetails passed in request body
+	 *  @return Product
+	 */
 	public Product updateProductInfo(Product productDetails, String productId) {
 		final String methodName = "[ ProductOrchestratorServiceImpl :: updateProductInfo ]";
 		LOGGER.debug(ProductConstants.LOG_DEBUG_METHOD_START_MSG, methodName);
@@ -118,6 +135,14 @@ public class ProductOrchestratorServiceImpl implements ProductOrchestratorServic
 		return productDetails;
 	}
 
+	
+	/**
+	 * Validates the service errors & Orchestrates the product details received from Redsky API & DB.
+	 * 
+	 * @param productDetailResponse
+	 * @param price
+	 * @return Product
+	 */
 	public Product getOrchestratedProductDetails(ProductDetailResponse productDetailResponse, Price price,
 			Long prodId) {
 

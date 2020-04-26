@@ -2,7 +2,8 @@ package com.myretail.catalog.product.ws.resource.v1;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
@@ -41,13 +42,21 @@ public class ProductResourceTest {
 
 		mockGetService("13860428");
 		mockMvc.perform(get("/myretail/api/v1/products/13860428").contentType(MediaType.APPLICATION_JSON)
-				.header(CLIENT_ID_HEADER, CLIENT_ID_HEADER_VALUE)).andExpect(status().isOk());
+				.header(CLIENT_ID_HEADER, CLIENT_ID_HEADER_VALUE)).andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
+		      	.andExpect(jsonPath("$.current_price.price").value("199.99"));
 	}
 
 	@Test
 	public void testGetProductDetailsInvalidProduct() throws Exception {
 		mockGetService("1386042811");
 		mockMvc.perform(get("/myretail/api/v1/products/13860428111").contentType(MediaType.APPLICATION_JSON)
+				.header(CLIENT_ID_HEADER, CLIENT_ID_HEADER_VALUE)).andExpect(status().isBadRequest());
+	}
+	
+	@Test
+	public void testGetProductDetailsInvalidProductWithAlphaNumeric() throws Exception {
+		mockGetService("1386042811");
+		mockMvc.perform(get("/myretail/api/v1/products/7y7y7u8eu38e3").contentType(MediaType.APPLICATION_JSON)
 				.header(CLIENT_ID_HEADER, CLIENT_ID_HEADER_VALUE)).andExpect(status().isBadRequest());
 	}
 

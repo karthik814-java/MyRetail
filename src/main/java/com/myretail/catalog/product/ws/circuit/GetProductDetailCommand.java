@@ -5,15 +5,15 @@ import com.myretail.catalog.product.ws.client.response.ProductDetailResponse;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 
-public class ProductDetailCommand extends HystrixCommand<ProductDetailResponse> {
+public class GetProductDetailCommand extends HystrixCommand<ProductDetailResponse> {
 	
 	
 	private final ProductDetailServiceClient productDetailServiceClient;
 	
 	private final Long productId;
 
-	 public ProductDetailCommand(Long productId, ProductDetailServiceClient productDetailServiceClient) {
-	        super(HystrixCommandGroupKey.Factory.asKey("ProductDetailCommand"));
+	 public GetProductDetailCommand(Long productId, ProductDetailServiceClient productDetailServiceClient) {
+	        super(HystrixCommandGroupKey.Factory.asKey("GetProductDetailCommand"));
 	        this.productId = productId;
 	        this.productDetailServiceClient=productDetailServiceClient; 
 	    }
